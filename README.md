@@ -423,3 +423,4 @@ services:
     ports:
       - "6333:6333"
 ```
+\n## Authentication Example\nA minimal Node.js example implementing JWT-based login with role-based access control is located in `backend/` with static pages in `frontend/`.
