@@ -1,4 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from pydantic import BaseModel
+from typing import Dict, List, Optional
 from fastapi.middleware.cors import CORSMiddleware
 import boto3
 import os
@@ -20,6 +22,36 @@ s3_client = boto3.client("s3", endpoint_url=S3_ENDPOINT_URL)
 # In-memory store for uploaded materials metadata
 # {course_id: [info, ...]}
 materials = {}
+
+# --- Question Review Queue ---
+
+class Question(BaseModel):
+    id: str
+    content: str
+    type: str
+    difficulty: str
+    source: str
+    status: str = "pending"
+    edits: List[str] = []
+
+questions: Dict[str, Question] = {}
+
+# Example pending questions for demonstration
+questions["q1"] = Question(
+    id="q1",
+    content="What is the capital of France?",
+    type="multiple_choice",
+    difficulty="easy",
+    source="geography.pdf",
+)
+questions["q2"] = Question(
+    id="q2",
+    content="Explain Newton's second law of motion.",
+    type="short_answer",
+    difficulty="medium",
+    source="physics.txt",
+)
+
 
 ALLOWED_TYPES = {
     "application/pdf",
@@ -65,3 +97,72 @@ def delete_material(material_id: str):
                 items.remove(item)
                 return {"status": "deleted"}
     raise HTTPException(status_code=404, detail="Material not found")
+
+
+# ---------------- Question Review Endpoints ----------------
+
+@app.get("/api/questions/review")
+def review_queue(
+    status: str = "pending",
+    type: Optional[str] = None,
+    difficulty: Optional[str] = None,
+    source: Optional[str] = None,
+):
+    result = [q for q in questions.values() if q.status == status]
+    if type:
+        result = [q for q in result if q.type == type]
+    if difficulty:
+        result = [q for q in result if q.difficulty == difficulty]
+    if source:
+        result = [q for q in result if q.source == source]
+    return result
+
+
+@app.post("/api/questions/{question_id}/approve")
+def approve_question(question_id: str):
+    q = questions.get(question_id)
+    if not q:
+        raise HTTPException(status_code=404, detail="Question not found")
+    q.status = "approved"
+    return q
+
+
+@app.post("/api/questions/{question_id}/reject")
+def reject_question(question_id: str):
+    q = questions.get(question_id)
+    if not q:
+        raise HTTPException(status_code=404, detail="Question not found")
+    q.status = "rejected"
+    return q
+
+
+@app.put("/api/questions/{question_id}")
+def edit_question(question_id: str, content: str):
+    q = questions.get(question_id)
+    if not q:
+        raise HTTPException(status_code=404, detail="Question not found")
+    q.edits.append(q.content)
+    q.content = content
+    return q
+
+
+@app.post("/api/questions/bulk_approve")
+def bulk_approve(ids: List[str]):
+    updated = []
+    for id_ in ids:
+        q = questions.get(id_)
+        if q:
+            q.status = "approved"
+            updated.append(id_)
+    return {"approved": updated}
+
+
+@app.post("/api/questions/bulk_reject")
+def bulk_reject(ids: List[str]):
+    updated = []
+    for id_ in ids:
+        q = questions.get(id_)
+        if q:
+            q.status = "rejected"
+            updated.append(id_)
+    return {"rejected": updated}
