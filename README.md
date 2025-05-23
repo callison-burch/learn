@@ -104,6 +104,15 @@ class DocumentProcessor:
         # Process and chunk for LLM consumption
 ```
 
+#### Python Pipeline with Celery (2025 Update)
+```python
+from document_pipeline.processor import DocumentProcessor
+from document_pipeline.tasks import process_document
+
+# Process a PDF in the background
+process_document.delay("/path/to/file.pdf")
+```
+
 ### 2. Question Generation System
 
 #### Updated Pipeline:
