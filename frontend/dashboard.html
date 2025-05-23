@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instructor Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; }
+    nav button, nav a { margin-right: 10px; }
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: flex-start; }
+    }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: 8px; }
+    .course-item { display: flex; justify-content: space-between; }
+    #courseForm { border: 1px solid #ccc; padding: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Instructor Dashboard</h1>
+    <nav>
+      <button id="newCourseBtn">New Course</button>
+      <a href="index.html">Upload Material</a>
+    </nav>
+  </header>
+
+  <section id="metrics"></section>
+
+  <section>
+    <h2>Courses</h2>
+    <ul id="courses"></ul>
+  </section>
+
+  <section>
+    <h2>Recent Activity</h2>
+    <ul id="activity"></ul>
+  </section>
+
+  <div id="courseForm" style="display:none;">
+    <h3 id="formTitle">Create Course</h3>
+    <input type="hidden" id="courseId" />
+    <label>Name <input id="courseName" /></label><br />
+    <label>Students <input id="studentCount" type="number" min="0" /></label><br />
+    <button id="saveCourse">Save</button>
+    <button id="cancelCourse">Cancel</button>
+  </div>
+</div>
+<script>
+async function loadCourses() {
+  const res = await fetch('/courses');
+  const courses = await res.json();
+  const list = document.getElementById('courses');
+  list.innerHTML = '';
+  courses.forEach(c => {
+    const li = document.createElement('li');
+    li.className = 'course-item';
+    li.textContent = `${c.name} (${c.studentCount} students)`;
+    const edit = document.createElement('button');
+    edit.textContent = 'Edit';
+    edit.onclick = () => showForm(c);
+    li.appendChild(edit);
+    list.appendChild(li);
+  });
+  const total = courses.reduce((s,c)=>s+c.studentCount,0);
+  document.getElementById('metrics').textContent = `Courses: ${courses.length} | Students: ${total}`;
+}
+
+async function loadActivity() {
+  const res = await fetch('/activities');
+  const acts = await res.json();
+  const list = document.getElementById('activity');
+  list.innerHTML = '';
+  acts.slice(-10).reverse().forEach(a => {
+    const li = document.createElement('li');
+    li.textContent = `${a.message} - ${new Date(a.timestamp).toLocaleString()}`;
+    list.appendChild(li);
+  });
+}
+
+function showForm(course) {
+  const form = document.getElementById('courseForm');
+  document.getElementById('courseId').value = course ? course.id : '';
+  document.getElementById('courseName').value = course ? course.name : '';
+  document.getElementById('studentCount').value = course ? course.studentCount : '';
+  document.getElementById('formTitle').textContent = course ? 'Edit Course' : 'Create Course';
+  form.style.display = 'block';
+}
+
+document.getElementById('newCourseBtn').onclick = () => showForm();
+document.getElementById('cancelCourse').onclick = () => document.getElementById('courseForm').style.display = 'none';
+document.getElementById('saveCourse').onclick = async () => {
+  const id = document.getElementById('courseId').value;
+  const payload = {
+    name: document.getElementById('courseName').value,
+    studentCount: parseInt(document.getElementById('studentCount').value) || 0
+  };
+  if(id) {
+    await fetch(`/courses/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  } else {
+    await fetch('/courses', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  }
+  document.getElementById('courseForm').style.display = 'none';
+  await loadCourses();
+  await loadActivity();
+};
+
+loadCourses();
+loadActivity();
+</script>
+</body>
+</html>
