@@ -423,3 +423,41 @@ services:
     ports:
       - "6333:6333"
 ```
+
+## Database Setup
+
+This repository uses **PostgreSQL** with **Prisma ORM**. The Prisma schema is in `prisma/schema.prisma` and migrations are stored under `prisma/migrations`.
+
+### Generate Prisma Clients
+
+```
+npm install
+npm run generate
+```
+
+### Apply Migrations
+
+Set the `DATABASE_URL` environment variable and run:
+
+```
+npm run migrate
+```
+
+### Seed Data
+
+```
+npm run seed
+```
+
+### Using Prisma from Python
+
+The Prisma Python client is generated to the `python_client` directory. An example usage is available in `scripts/py_client.py`.
+
+### Database Backup
+
+Run `scripts/backup.sh` to create a `pg_dump` of the current database:
+
+```
+DATABASE_URL=postgresql://user:pass@localhost:5432/dbname ./scripts/backup.sh
+```
+

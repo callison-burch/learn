@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Material Management</title>
+</head>
+<body>
+  <h1>Course Materials</h1>
+  <input type="text" id="course" placeholder="Course ID" />
+  <button id="load">Load Materials</button>
+  <ul id="list"></ul>
+<script>
+const list = document.getElementById('list');
+document.getElementById('load').addEventListener('click', load);
+
+function load() {
+  const course = document.getElementById('course').value;
+  fetch('/api/materials/' + encodeURIComponent(course))
+    .then(res => res.json())
+    .then(data => {
+      list.innerHTML = '';
+      data.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.filename + ' ';
+        const del = document.createElement('button');
+        del.textContent = 'Delete';
+        del.onclick = () => {
+          fetch('/api/materials/' + item.id, { method: 'DELETE' })
+            .then(() => load());
+        };
+        li.appendChild(del);
+        list.appendChild(li);
+      });
+    });
+}
+</script>
+</body>
+</html>
