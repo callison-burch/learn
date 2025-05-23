@@ -423,3 +423,19 @@ services:
     ports:
       - "6333:6333"
 ```
+
+### Upload API Endpoints
+- `POST /api/materials/upload` – upload a file for a course
+- `GET /api/materials/{course_id}` – list materials for a course
+- `DELETE /api/materials/{material_id}` – remove a material
+
+
+## Local Development for Upload System
+
+Run the FastAPI backend:
+```bash
+uvicorn backend.main:app --reload
+```
+
+Open `frontend/index.html` in your browser to upload files or `frontend/materials.html` to manage uploads.
+
