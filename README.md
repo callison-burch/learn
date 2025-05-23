@@ -460,4 +460,3 @@ Run `scripts/backup.sh` to create a `pg_dump` of the current database:
 ```
 DATABASE_URL=postgresql://user:pass@localhost:5432/dbname ./scripts/backup.sh
 ```
-

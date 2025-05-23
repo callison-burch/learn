@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Profile</title>
+</head>
+<body>
+  <h1>User Profile</h1>
+  <div id="info"></div>
+  <script>
+  async function loadProfile() {
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = '/login.html'; return; }
+    const res = await fetch('/profile', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    if (data.user) {
+      document.getElementById('info').textContent = `Username: ${data.user.username} Role: ${data.user.role}`;
+    } else {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    }
+  }
+  loadProfile();
+  </script>
+</body>
+</html>
