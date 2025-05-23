@@ -17,6 +17,18 @@ app.use(session({
 const users = [];
 const SECRET_KEY = 'super_secret_jwt_key';
 
+// In-memory data stores
+const courses = [];
+const activities = [];
+
+function logActivity(message) {
+  activities.push({
+    id: activities.length + 1,
+    message,
+    timestamp: Date.now(),
+  });
+}
+
 async function createUser(username, password, role = 'Student') {
   const hashed = await bcrypt.hash(password, 10);
   const user = { username, password: hashed, role };
@@ -80,6 +92,39 @@ app.get('/instructor', authenticate, authorize('Instructor'), (req, res) => {
 
 app.get('/student', authenticate, authorize('Student'), (req, res) => {
   res.json({ message: 'Welcome Student' });
+});
+
+// List all courses with metrics
+app.get('/courses', (req, res) => {
+  res.json(courses);
+});
+
+// Create a new course
+app.post('/courses', (req, res) => {
+  const { name, studentCount = 0 } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'Name required' });
+  }
+  const course = { id: String(courses.length + 1), name, studentCount };
+  courses.push(course);
+  logActivity(`Course created: ${name}`);
+  res.json(course);
+});
+
+// Edit an existing course
+app.put('/courses/:id', (req, res) => {
+  const course = courses.find(c => c.id === req.params.id);
+  if (!course) return res.status(404).json({ error: 'Not found' });
+  const { name, studentCount } = req.body;
+  if (name !== undefined) course.name = name;
+  if (studentCount !== undefined) course.studentCount = studentCount;
+  logActivity(`Course updated: ${course.name}`);
+  res.json(course);
+});
+
+// Activity feed
+app.get('/activities', (req, res) => {
+  res.json(activities.slice(-50));
 });
 
 app.listen(3000, () => console.log('Server running on port 3000'));
