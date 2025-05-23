@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Materials</title>
+  <style>
+    #drop-area {
+      border: 2px dashed #ccc;
+      padding: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload Course Material</h1>
+  <input type="text" id="course" placeholder="Course ID" />
+  <div id="drop-area">
+    <p>Drag & Drop files here</p>
+    <input type="file" id="fileElem" accept=".pdf,.txt,.docx,.md" style="display:none" />
+    <button id="fileSelect">Select files</button>
+  </div>
+  <progress id="progress" max="100" value="0"></progress>
+  <script>
+    const dropArea = document.getElementById('drop-area');
+    const fileElem = document.getElementById('fileElem');
+    const fileSelect = document.getElementById('fileSelect');
+    const progress = document.getElementById('progress');
+    const courseInput = document.getElementById('course');
+
+    fileSelect.addEventListener('click', () => fileElem.click());
+    ['dragenter','dragover','dragleave','drop'].forEach(name => {
+      dropArea.addEventListener(name, preventDefaults, false);
+    });
+
+    function preventDefaults (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    dropArea.addEventListener('drop', handleDrop, false);
+    fileElem.addEventListener('change', () => handleFiles(fileElem.files), false);
+
+    function handleDrop(e) {
+      handleFiles(e.dataTransfer.files);
+    }
+
+    function handleFiles(files) {
+      const course = courseInput.value;
+      [...files].forEach(file => uploadFile(file, course));
+    }
+
+    function uploadFile(file, course) {
+      if (file.size > 100 * 1024 * 1024) {
+        alert('File exceeds 100MB limit');
+        return;
+      }
+      const url = '/api/materials/upload?course_id=' + encodeURIComponent(course);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) {
+          progress.value = (e.loaded * 100.0 / e.total) || 0;
+        }
+      });
+      xhr.onload = () => {
+        progress.value = 0;
+        console.log('Upload complete', xhr.responseText);
+      };
+      const formData = new FormData();
+      formData.append('file', file);
+      xhr.send(formData);
+    }
+  </script>
+</body>
+</html>
