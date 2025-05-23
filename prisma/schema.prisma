@@ -1,0 +1,65 @@
+// Prisma schema for Learn database
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator py {
+  provider = "prisma-client-py"
+  output   = "../python_client"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  role      String
+  createdAt DateTime @default(now())
+
+  courses   Course[] @relation("InstructorCourses")
+  responses StudentResponse[]
+
+  @@map("users")
+}
+
+model Course {
+  id           Int     @id @default(autoincrement())
+  name         String
+  description  String
+  instructor   User     @relation("InstructorCourses", fields: [instructorId], references: [id])
+  instructorId Int
+
+  questions    Question[]
+
+  @@map("courses")
+}
+
+model Question {
+  id        Int      @id @default(autoincrement())
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  Int
+  content   String
+  type      String
+  metadata  Json?
+
+  responses StudentResponse[]
+
+  @@map("questions")
+}
+
+model StudentResponse {
+  id         Int      @id @default(autoincrement())
+  student    User     @relation(fields: [studentId], references: [id])
+  studentId  Int
+  question   Question @relation(fields: [questionId], references: [id])
+  questionId Int
+  response   String
+  isCorrect  Boolean
+
+  @@map("student_responses")
+}
