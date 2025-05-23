@@ -423,3 +423,28 @@ services:
     ports:
       - "6333:6333"
 ```
+
+## Development Setup
+
+This repository uses a monorepo structure containing `frontend` (Next.js) and `backend` (FastAPI) projects.
+
+### Requirements
+- Node.js 20+
+- Python 3.11+
+- Docker (optional for containerized development)
+
+### Install dependencies
+```bash
+# Frontend
+cd frontend && npm install
+# Backend
+cd ../backend && pip install -r requirements.txt
+```
+
+### Running with Docker Compose
+```bash
+docker-compose up --build
+```
+
+Environment variables can be configured by copying `.env.example` files in each project.
+

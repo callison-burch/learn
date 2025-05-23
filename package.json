@@ -1,0 +1,15 @@
+{
+  "name": "learn-monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" --ignore-path .gitignore"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.5"
+  }
+}

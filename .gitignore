@@ -1,0 +1,18 @@
+# Node dependencies
+node_modules/
+
+# Python environment
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Environment files
+.env
+.env.*
+!.env.example
+frontend/.next/
+frontend/out/
+
+# OS files
+.DS_Store
