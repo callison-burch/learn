@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Signup</title>
+</head>
+<body>
+  <h1>Signup</h1>
+  <form id="signupForm">
+    <label>Username: <input type="text" id="username" /></label><br />
+    <label>Password: <input type="password" id="password" /></label><br />
+    <label>Role:
+      <select id="role">
+        <option value="Student">Student</option>
+        <option value="Instructor">Instructor</option>
+        <option value="TA">TA</option>
+      </select>
+    </label><br />
+    <button type="submit">Signup</button>
+  </form>
+  <div id="msg"></div>
+<script>
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const role = document.getElementById('role').value;
+  const res = await fetch('/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password, role })
+  });
+  const data = await res.json();
+  if (data.message) {
+    window.location.href = '/login.html';
+  } else {
+    document.getElementById('msg').textContent = data.error;
+  }
+});
+</script>
+</body>
+</html>
