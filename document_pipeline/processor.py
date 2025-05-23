@@ -51,6 +51,21 @@ class DocumentProcessor:
             )
             """
         )
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS questions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                chunk_id INTEGER,
+                question_index INTEGER,
+                question TEXT,
+                choices TEXT,
+                answer TEXT,
+                status TEXT DEFAULT 'pending',
+                cost REAL DEFAULT 0,
+                FOREIGN KEY(chunk_id) REFERENCES chunks(id)
+            )
+            """
+        )
         conn.commit()
         conn.close()
 
