@@ -3,6 +3,11 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const {
+  assignments,
+  templates,
+  createAssignment,
+} = require('./assignments');
 
 const app = express();
 app.use(express.json());
@@ -80,6 +85,40 @@ app.get('/instructor', authenticate, authorize('Instructor'), (req, res) => {
 
 app.get('/student', authenticate, authorize('Student'), (req, res) => {
   res.json({ message: 'Welcome Student' });
+});
+
+// ----- Assignment Endpoints -----
+app.get('/assignments', authenticate, authorize('Instructor'), (req, res) => {
+  res.json(assignments);
+});
+
+app.post('/assignments', authenticate, authorize('Instructor'), (req, res) => {
+  const data = req.body;
+  if (!data.title || !Array.isArray(data.questions)) {
+    return res.status(400).json({ error: 'Invalid assignment data' });
+  }
+  const assignment = createAssignment(data);
+  res.json(assignment);
+});
+
+app.get('/assignments/:id', authenticate, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const assignment = assignments.find(a => a.id === id);
+  if (!assignment) return res.status(404).json({ error: 'Not found' });
+  res.json(assignment);
+});
+
+app.post('/templates', authenticate, authorize('Instructor'), (req, res) => {
+  const template = req.body;
+  if (!template.name || !Array.isArray(template.questions)) {
+    return res.status(400).json({ error: 'Invalid template data' });
+  }
+  templates.push(template);
+  res.json({ message: 'Template saved' });
+});
+
+app.get('/templates', authenticate, authorize('Instructor'), (req, res) => {
+  res.json(templates);
 });
 
 app.listen(3000, () => console.log('Server running on port 3000'));

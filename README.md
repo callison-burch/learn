@@ -469,3 +469,7 @@ Run `scripts/backup.sh` to create a `pg_dump` of the current database:
 ```
 DATABASE_URL=postgresql://user:pass@localhost:5432/dbname ./scripts/backup.sh
 ```
+
+## Assignment Builder
+
+Instructors can create and schedule assignments from approved questions using `frontend/assignments.html`. The page provides a simple wizard to configure settings, drag and drop questions, preview the student view and save the assignment to the backend. Assignments are stored in memory by `backend/assignments.js` and exposed through `/assignments` endpoints.

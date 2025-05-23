@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Assignment Builder</title>
+  <style>
+    #questions, #selected { min-height: 150px; padding: 10px; border: 1px solid #ccc; }
+    .question { padding: 4px; border: 1px dashed #999; margin: 2px; cursor: move; }
+    .step { display: none; }
+    .step.active { display: block; }
+  </style>
+</head>
+<body>
+  <h1>Create Assignment</h1>
+  <div id="wizard">
+    <div class="step" id="step1">
+      <h2>Assignment Settings</h2>
+      <label>Title <input id="title" type="text"></label><br>
+      <label>Start Date <input id="start" type="datetime-local"></label><br>
+      <label>Due Date <input id="due" type="datetime-local"></label><br>
+      <label>Attempts <input id="attempts" type="number" min="1" value="1"></label><br>
+      <label>Time Limit (min) <input id="limit" type="number" min="0" value="0"></label><br>
+      <button id="next1">Next</button>
+    </div>
+    <div class="step" id="step2">
+      <h2>Select Questions</h2>
+      <div id="questions"></div>
+      <h3>Selected</h3>
+      <div id="selected"></div>
+      <button id="prev2">Back</button>
+      <button id="next2">Next</button>
+    </div>
+    <div class="step" id="step3">
+      <h2>Preview</h2>
+      <div id="preview"></div>
+      <button id="prev3">Back</button>
+      <button id="save">Save</button>
+    </div>
+  </div>
+
+  <script>
+    const steps = [document.getElementById('step1'), document.getElementById('step2'), document.getElementById('step3')];
+    let current = 0;
+    function showStep(i) { steps[current].classList.remove('active'); current = i; steps[current].classList.add('active'); }
+    showStep(0);
+
+    const approvedQuestions = [
+      { id: 1, text: 'What is 2+2?', topic: 'Math' },
+      { id: 2, text: 'Define gravity.', topic: 'Science' },
+      { id: 3, text: 'Who wrote Hamlet?', topic: 'Literature' }
+    ];
+    const questionsDiv = document.getElementById('questions');
+    const selectedDiv = document.getElementById('selected');
+
+    approvedQuestions.forEach(q => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.textContent = `${q.topic}: ${q.text}`;
+      div.draggable = true;
+      div.dataset.id = q.id;
+      div.addEventListener('dragstart', e => e.dataTransfer.setData('id', q.id));
+      questionsDiv.appendChild(div);
+    });
+
+    ;[questionsDiv, selectedDiv].forEach(el => {
+      el.addEventListener('dragover', e => e.preventDefault());
+      el.addEventListener('drop', e => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('id');
+        const item = document.querySelector(`.question[data-id="${id}"]`);
+        el.appendChild(item);
+      });
+    });
+
+    document.getElementById('next1').onclick = () => showStep(1);
+    document.getElementById('prev2').onclick = () => showStep(0);
+    document.getElementById('next2').onclick = () => {
+      // build preview
+      const preview = document.getElementById('preview');
+      preview.innerHTML = '';
+      Array.from(selectedDiv.children).forEach((c, i) => {
+        const p = document.createElement('p');
+        p.textContent = `${i + 1}. ${c.textContent}`;
+        preview.appendChild(p);
+      });
+      showStep(2);
+    };
+    document.getElementById('prev3').onclick = () => showStep(1);
+
+    document.getElementById('save').onclick = async () => {
+      const data = {
+        title: document.getElementById('title').value,
+        startDate: document.getElementById('start').value,
+        dueDate: document.getElementById('due').value,
+        attempts: parseInt(document.getElementById('attempts').value, 10),
+        timeLimit: parseInt(document.getElementById('limit').value, 10),
+        questions: Array.from(selectedDiv.children).map(c => parseInt(c.dataset.id, 10)),
+      };
+      const token = localStorage.getItem('token');
+      const res = await fetch('/assignments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        alert('Assignment created');
+      } else {
+        alert('Error creating assignment');
+      }
+    };
+  </script>
+</body>
+</html>
